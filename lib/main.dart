@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'MapPage.dart';
+import 'package:epsilon/page/MapPage.dart';
 
 void main() => runApp(Home());
 

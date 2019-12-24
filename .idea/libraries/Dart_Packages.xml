@@ -37,6 +37,13 @@
             </list>
           </value>
         </entry>
+        <entry key="carousel_slider">
+          <value>
+            <list>
+              <option value="$PROJECT_DIR$/../../dev/flutter/.pub-cache/hosted/pub.dartlang.org/carousel_slider-1.3.1/lib" />
+            </list>
+          </value>
+        </entry>
         <entry key="charcode">
           <value>
             <list>
@@ -318,6 +325,7 @@
       <root url="file://$PROJECT_DIR$/../../dev/flutter/.pub-cache/hosted/pub.dartlang.org/async-2.4.0/lib" />
       <root url="file://$PROJECT_DIR$/../../dev/flutter/.pub-cache/hosted/pub.dartlang.org/bloc-2.0.0/lib" />
       <root url="file://$PROJECT_DIR$/../../dev/flutter/.pub-cache/hosted/pub.dartlang.org/boolean_selector-1.0.5/lib" />
+      <root url="file://$PROJECT_DIR$/../../dev/flutter/.pub-cache/hosted/pub.dartlang.org/carousel_slider-1.3.1/lib" />
       <root url="file://$PROJECT_DIR$/../../dev/flutter/.pub-cache/hosted/pub.dartlang.org/charcode-1.1.2/lib" />
       <root url="file://$PROJECT_DIR$/../../dev/flutter/.pub-cache/hosted/pub.dartlang.org/collection-1.14.11/lib" />
       <root url="file://$PROJECT_DIR$/../../dev/flutter/.pub-cache/hosted/pub.dartlang.org/convert-2.1.1/lib" />
