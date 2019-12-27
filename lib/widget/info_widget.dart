@@ -21,7 +21,7 @@ class InfoWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: Colors.white,//(type == 0) ? Color(0xff2f5983) : Colors.white,
+        color: Colors.white, //(type == 0) ? Color(0xff2f5983) : Colors.white,
         borderRadius: (type == 0)
             ? new BorderRadius.only(
                 bottomRight: Radius.circular(20),
@@ -48,7 +48,8 @@ class InfoWidget {
                             style: TextStyle(
                               fontFamily: 'Roboto-Bold',
                               fontSize: 18,
-                              color: Colors.black54,//(type == 0) ? Colors.white : Colors.black54,
+                              color: Colors
+                                  .black54, //(type == 0) ? Colors.white : Colors.black54,
                             ),
                           ),
                         ),
@@ -61,7 +62,8 @@ class InfoWidget {
                             Text('${shop.rating}',
                                 style: TextStyle(
                                   fontFamily: 'Roboto',
-                                  color: Colors.black38,//(type == 0) ? Colors.white : Colors.black38,
+                                  color: Colors
+                                      .black38, //(type == 0) ? Colors.white : Colors.black38,
                                   fontSize: 12,
                                 )),
                             Container(
@@ -93,11 +95,20 @@ class InfoWidget {
                     child: Align(
                       alignment: Alignment.topRight,
                       child: Padding(
-                        padding: EdgeInsets.fromLTRB(0, 4, 12, 0),
-                        child: Icon(
-                          Icons.remove,
-                          color: Colors.black54,//(type == 0) ? Colors.white : Colors.black54,
-                          size: 20,
+                        padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+                        child: Container(
+                          alignment: Alignment.center,
+                          height: 40,
+                          width: 40,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Icon(
+                            Icons.remove,
+                            color: Colors
+                                .black54, //(type == 0) ? Colors.white : Colors.black54,
+                            size: 20,
+                          ),
                         ),
                       ),
                     ),
@@ -116,7 +127,8 @@ class InfoWidget {
                 style: TextStyle(
                   fontFamily: 'Roboto-Medium',
                   fontSize: 12,
-                  color: Colors.black54,//(type == 0) ? Colors.white : Colors.black54,
+                  color: Colors
+                      .black54, //(type == 0) ? Colors.white : Colors.black54,
                 ),
               ),
             ),
@@ -131,7 +143,8 @@ class InfoWidget {
                 style: TextStyle(
                   fontFamily: 'Roboto-Medium',
                   fontSize: 12,
-                  color: Colors.black54,//(type == 0) ? Colors.white : Colors.black54,
+                  color: Colors
+                      .black54, //(type == 0) ? Colors.white : Colors.black54,
                 ),
               ),
             ),

@@ -93,8 +93,12 @@ class ShopPageState extends State<ShopPage> {
                             Navigator.pop(context);
                           },
                           child: Container(
+                            alignment: Alignment.center,
                             height: 50,
                             width: 50,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(0),
+                            ),
                             child: Icon(
                               Icons.keyboard_backspace,
                               size: 20,
@@ -151,6 +155,7 @@ class ShopPageState extends State<ShopPage> {
                             size: 20,
                             icon: Icons.favorite_border,
                             text: null,
+                            onClick: null,
                           ).build(),
                         ),
                       ),
@@ -164,6 +169,7 @@ class ShopPageState extends State<ShopPage> {
                             size: 20,
                             icon: Icons.favorite_border,
                             text: 'Comment',
+                            onClick: null,
                           ).build(),
                         ),
                       ),

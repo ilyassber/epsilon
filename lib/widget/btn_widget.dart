@@ -18,20 +18,21 @@ class BtnWidget {
   final Function onClick;
 
   Widget build() {
-    return GestureDetector(
-      onTap: () {
-        onClick();
-      },
-      child: Material(
-        elevation: 5,
+    return Material(
+      elevation: 5,
+      borderRadius: BorderRadius.circular(20),
+      shadowColor: Color(0xff2f5983).withOpacity(0.7),
+      color: Color(0xff2f5983),
+      child: InkWell(
+        onTap: () {
+          if (onClick != null) onClick();
+        },
         borderRadius: BorderRadius.circular(20),
-        shadowColor: Color(0xff2f5983).withOpacity(0.7),
         child: Container(
           height: height,
           width: width,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: Color(0xff2f5983),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Padding(

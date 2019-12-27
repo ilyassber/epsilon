@@ -6,6 +6,7 @@ import 'package:epsilon/model/category.dart';
 import 'package:epsilon/model/picture.dart';
 import 'package:epsilon/model/shop.dart';
 import 'package:epsilon/page/shopPage.dart';
+import 'package:epsilon/settings/settings_state.dart';
 import 'package:epsilon/widget/btn_widget.dart';
 import 'package:epsilon/widget/elem_to_widget.dart';
 import 'package:epsilon/tools/geo_tools.dart';
@@ -20,6 +21,10 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 class MapPage extends StatefulWidget {
+  MapPage({@required this.settingsState,});
+
+  final SettingsState settingsState;
+
   MapPageState createState() => MapPageState();
 }
 
@@ -29,6 +34,8 @@ class MapPageState extends State<MapPage> {
   PermissionStatus _status;
 
   // Map Params
+
+  double _zoom = 15;
 
   // Widget Params
 
@@ -90,6 +97,7 @@ class MapPageState extends State<MapPage> {
 
   // Other Params
 
+  SettingsState settingsState;
   double height;
   double width;
   BuildContext context;
@@ -99,6 +107,7 @@ class MapPageState extends State<MapPage> {
   void initState() {
     super.initState();
     //WidgetsBinding.instance.addObserver(this);
+    settingsState = widget.settingsState;
     elemToWidget = new ElemToWidget();
     geoTools = new GeoTools();
     rootBundle.loadString('assets/map/map_style_silver').then((string) {
@@ -281,7 +290,7 @@ class MapPageState extends State<MapPage> {
                     CameraPosition(
                         target: LatLng(currentLocation.latitude,
                             currentLocation.longitude),
-                        zoom: 15.0,
+                        zoom: _zoom,
                         tilt: 0.0),
                 markers: _markers,
                 scrollGesturesEnabled: true,
@@ -292,15 +301,18 @@ class MapPageState extends State<MapPage> {
                 mapType: _currentMapType,
                 zoomGesturesEnabled: true,
                 mapToolbarEnabled: false,
+                onCameraMove: (CameraPosition position) {
+                  _zoom = position.zoom;
+                },
               ),
         Align(
           alignment: Alignment.topRight,
           child: Padding(
-            padding: EdgeInsets.fromLTRB(0, 40, 0, 0),
+            padding: EdgeInsets.fromLTRB(0, height / 7, 0, 0),
             child: Container(
               alignment: Alignment.center,
-              height: 60,
-              width: 60,
+              height: 140,
+              width: 50,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(20),
@@ -326,6 +338,25 @@ class MapPageState extends State<MapPage> {
                     icon: Icons.my_location,
                     size: 20,
                     onClick: _myLocation,
+                  ).build(),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(0, 5, 0, 5),
+                    child: BtnWidget(
+                      width: 40,
+                      height: 40,
+                      text: null,
+                      icon: Icons.add,
+                      size: 20,
+                      onClick: _zoomIn,
+                    ).build(),
+                  ),
+                  BtnWidget(
+                    width: 40,
+                    height: 40,
+                    text: null,
+                    icon: Icons.remove,
+                    size: 20,
+                    onClick: _zoomOut,
                   ).build(),
                 ],
               ),
@@ -397,8 +428,40 @@ class MapPageState extends State<MapPage> {
     controller.animateCamera(CameraUpdate.newCameraPosition(
       CameraPosition(
           target: LatLng(currentLocation.latitude, currentLocation.longitude),
-          zoom: 15.0,
+          zoom: _zoom,
           tilt: 0.0),
     ));
+  }
+
+  void _zoomIn() async {
+    if (_zoom <= 19) {
+      _zoom = _zoom + 1;
+      final GoogleMapController controller = mapController;
+      LatLng latLng = await _currentCameraPosition();
+      controller.animateCamera(CameraUpdate.newCameraPosition(
+        CameraPosition(target: latLng, zoom: _zoom, tilt: 0.0),
+      ));
+    }
+  }
+
+  void _zoomOut() async {
+    if (_zoom >= 3) {
+      _zoom = _zoom - 1;
+      final GoogleMapController controller = mapController;
+      LatLng latLng = await _currentCameraPosition();
+      controller.animateCamera(CameraUpdate.newCameraPosition(
+        CameraPosition(target: latLng, zoom: _zoom, tilt: 0.0),
+      ));
+    }
+  }
+
+  Future<LatLng> _currentCameraPosition() async {
+    final GoogleMapController controller = mapController;
+    LatLngBounds latLngBounds = await controller.getVisibleRegion();
+    LatLng latLng = new LatLng(
+        (latLngBounds.northeast.latitude + latLngBounds.southwest.latitude) / 2,
+        (latLngBounds.northeast.longitude + latLngBounds.southwest.longitude) /
+            2);
+    return latLng;
   }
 }

@@ -47,8 +47,8 @@ class ShopWidget {
                   child: Material(
                     elevation: 5.0,
                     borderRadius: new BorderRadius.only(
-                      bottomRight: Radius.circular(17),
-                      topRight: Radius.circular(17),
+                      bottomRight: Radius.circular(20),
+                      topRight: Radius.circular(20),
                     ),
                     shadowColor: Colors.black.withOpacity(0.5),
                     child: new InfoWidget(
@@ -87,12 +87,7 @@ class ShopWidget {
                   height: height,
                   decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.3),
-                    borderRadius: new BorderRadius.only(
-                      topLeft: Radius.circular(17),
-                      bottomLeft: Radius.circular(17),
-                      bottomRight: Radius.circular(17),
-                      topRight: Radius.circular(17),
-                    ),
+                    borderRadius: BorderRadius.circular(20),
                   ),
                 ),
               ),
