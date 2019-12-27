@@ -2,11 +2,15 @@ import 'dart:async';
 
 import 'dart:core';
 import 'dart:typed_data';
+import 'package:epsilon/map/polyline_effect.dart';
 import 'package:epsilon/model/category.dart';
 import 'package:epsilon/model/picture.dart';
 import 'package:epsilon/model/shop.dart';
+import 'package:epsilon/model/steps.dart';
+import 'package:epsilon/model/xcolor.dart';
 import 'package:epsilon/page/shopPage.dart';
 import 'package:epsilon/settings/settings_state.dart';
+import 'package:epsilon/tools/network_tools.dart';
 import 'package:epsilon/widget/btn_widget.dart';
 import 'package:epsilon/widget/elem_to_widget.dart';
 import 'package:epsilon/tools/geo_tools.dart';
@@ -19,9 +23,13 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:floating_bubble/floating_bubble.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 
 class MapPage extends StatefulWidget {
-  MapPage({@required this.settingsState,});
+  MapPage({
+    @required this.settingsState,
+  });
 
   final SettingsState settingsState;
 
@@ -63,6 +71,7 @@ class MapPageState extends State<MapPage> {
 
   // Polyline Params
 
+  List<LatLng> latLng = [];
   final Set<Polyline> _polyline = {};
 
   // List Params
@@ -101,6 +110,7 @@ class MapPageState extends State<MapPage> {
   double height;
   double width;
   BuildContext context;
+  NetworkTools network;
 
   // check permissions
   @override
@@ -109,6 +119,7 @@ class MapPageState extends State<MapPage> {
     //WidgetsBinding.instance.addObserver(this);
     settingsState = widget.settingsState;
     elemToWidget = new ElemToWidget();
+    network = new NetworkTools();
     geoTools = new GeoTools();
     rootBundle.loadString('assets/map/map_style_silver').then((string) {
       setState(() {
@@ -167,8 +178,7 @@ class MapPageState extends State<MapPage> {
         },
         markerId: MarkerId('$i'),
         icon: BitmapDescriptor.fromBytes(markerIcons[i]),
-        position: new LatLng(currentLocation.latitude + ((i + 1) / 300),
-            currentLocation.longitude + ((i + 1) / 400)),
+        position: new LatLng(shops[i - 1].lat, shops[i - 1].lng),
       ));
     }
     userPos = new Marker(
@@ -201,6 +211,8 @@ class MapPageState extends State<MapPage> {
   // Init Widget
 
   void initShop(BuildContext context, Shop shop) {
+    getRoad(_centre, new LatLng(shop.lat, shop.lng));
+    //_getPolyline(_centre, new LatLng(shop.lat, shop.lng));
     setState(() {
       shopWidget = new ShopWidget(
           context: context,
@@ -217,6 +229,8 @@ class MapPageState extends State<MapPage> {
   void shopCallback(int access, Shop shop) {
     if (access == 0) {
       setState(() {
+        _polyline.clear();
+        latLng.clear();
         shopVisibility = false;
       });
     } else if (access == 1) {
@@ -271,113 +285,124 @@ class MapPageState extends State<MapPage> {
     height = MediaQuery.of(context).size.height;
     width = MediaQuery.of(context).size.width;
     initList(context);
-    return Stack(
-      children: <Widget>[
-        currentLocation == null
-            ? Center(child: CircularProgressIndicator())
-            : GoogleMap(
-                onMapCreated: (GoogleMapController controller) {
-                  //_mapController.complete(controller);
-                  mapController = controller;
+    return Scaffold(
+      body: Container(
+        height: height,
+        width: width,
+        child: Stack(
+          children: <Widget>[
+            currentLocation == null
+                ? Center(child: CircularProgressIndicator())
+                : GoogleMap(
+                    onMapCreated: (GoogleMapController controller) {
+                      //_mapController.complete(controller);
+                      mapController = controller;
 //                  mapController.setMapStyle(
 //                      '[{"featureType": "all","stylers": [{ "color": "#C0C0C0" }]},{"featureType": "road.arterial","elementType": "geometry","stylers": [{ "color": "#CCFFFF" }]},{"featureType": "landscape","elementType": "labels","stylers": [{ "visibility": "off" }]}]');
-                  if (_mapStyle != null && controller != null) {
-                    print('#### SET_MAP_STYLE ####');
-                    mapController.setMapStyle(_mapStyle);
-                  }
-                },
-                initialCameraPosition: // required parameter that sets the starting camera position. Camera position describes which part of the world you want the map to point at.
-                    CameraPosition(
-                        target: LatLng(currentLocation.latitude,
-                            currentLocation.longitude),
-                        zoom: _zoom,
-                        tilt: 0.0),
-                markers: _markers,
-                scrollGesturesEnabled: true,
-                tiltGesturesEnabled: true,
-                compassEnabled: true,
-                rotateGesturesEnabled: true,
-                myLocationEnabled: false,
-                mapType: _currentMapType,
-                zoomGesturesEnabled: true,
-                mapToolbarEnabled: false,
-                onCameraMove: (CameraPosition position) {
-                  _zoom = position.zoom;
-                },
-              ),
-        Align(
-          alignment: Alignment.topRight,
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(0, height / 7, 0, 0),
-            child: Container(
-              alignment: Alignment.center,
-              height: 140,
-              width: 50,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  bottomLeft: Radius.circular(20),
-                ),
-                gradient: LinearGradient(
-                  begin: Alignment.centerRight,
-                  end: Alignment.centerLeft,
-                  colors: [
-                    Colors.black.withOpacity(0.2),
-                    Colors.black.withOpacity(0.2),
-                  ],
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  BtnWidget(
-                    width: 40,
-                    height: 40,
-                    text: null,
-                    icon: Icons.my_location,
-                    size: 20,
-                    onClick: _myLocation,
-                  ).build(),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(0, 5, 0, 5),
-                    child: BtnWidget(
-                      width: 40,
-                      height: 40,
-                      text: null,
-                      icon: Icons.add,
-                      size: 20,
-                      onClick: _zoomIn,
-                    ).build(),
+                      if (_mapStyle != null && controller != null) {
+                        print('#### SET_MAP_STYLE ####');
+                        mapController.setMapStyle(_mapStyle);
+                      }
+                    },
+                    initialCameraPosition: // required parameter that sets the starting camera position. Camera position describes which part of the world you want the map to point at.
+                        CameraPosition(
+                            target: LatLng(currentLocation.latitude,
+                                currentLocation.longitude),
+                            zoom: _zoom,
+                            tilt: 0.0),
+                    markers: _markers,
+                    polylines: _polyline,
+                    scrollGesturesEnabled: true,
+                    tiltGesturesEnabled: true,
+                    compassEnabled: true,
+                    rotateGesturesEnabled: true,
+                    myLocationEnabled: false,
+                    mapType: _currentMapType,
+                    zoomGesturesEnabled: true,
+                    mapToolbarEnabled: false,
+                    onCameraMove: (CameraPosition position) {
+                      _zoom = position.zoom;
+                    },
                   ),
-                  BtnWidget(
-                    width: 40,
-                    height: 40,
-                    text: null,
-                    icon: Icons.remove,
-                    size: 20,
-                    onClick: _zoomOut,
-                  ).build(),
-                ],
+            Visibility(
+              visible: shopVisibility,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(0, 16, 0, 40),
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Container(
+                    height: 140,
+                    child: elemToWidget.getShopWidget(
+                        context, shops[0], height, width, shopCallback),
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-        Visibility(
-          visible: shopVisibility,
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(0, 16, 0, 40),
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Container(
-                height: 140,
-                child: elemToWidget.getShopWidget(
-                    context, shops[0], height, width, shopCallback),
+            FloatingBubble(
+              child: PreferredSize(
+                child: Align(
+                  alignment: Alignment.center,
+                  child: Container(
+                    alignment: Alignment.center,
+                    height: 140,
+                    width: 50,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.only(
+                        bottomRight: Radius.circular(20),
+                        topRight: Radius.circular(20),
+                        topLeft: Radius.circular(20),
+                        bottomLeft: Radius.circular(20),
+                      ),
+                      gradient: LinearGradient(
+                        begin: Alignment.centerRight,
+                        end: Alignment.centerLeft,
+                        colors: [
+                          Colors.black.withOpacity(0.2),
+                          Colors.black.withOpacity(0.2),
+                        ],
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        BtnWidget(
+                          width: 40,
+                          height: 40,
+                          text: null,
+                          icon: Icons.my_location,
+                          size: 20,
+                          onClick: _myLocation,
+                        ).build(),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(0, 5, 0, 5),
+                          child: BtnWidget(
+                            width: 40,
+                            height: 40,
+                            text: null,
+                            icon: Icons.add,
+                            size: 20,
+                            onClick: _zoomIn,
+                          ).build(),
+                        ),
+                        BtnWidget(
+                          width: 40,
+                          height: 40,
+                          text: null,
+                          icon: Icons.remove,
+                          size: 20,
+                          onClick: _zoomOut,
+                        ).build(),
+                      ],
+                    ),
+                  ),
+                ),
+                preferredSize: Size(55, 140),
               ),
             ),
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
@@ -423,6 +448,8 @@ class MapPageState extends State<MapPage> {
     }
   }
 
+  // Callback Functions
+
   Future<void> _myLocation() async {
     final GoogleMapController controller = mapController;
     controller.animateCamera(CameraUpdate.newCameraPosition(
@@ -463,5 +490,51 @@ class MapPageState extends State<MapPage> {
         (latLngBounds.northeast.longitude + latLngBounds.southwest.longitude) /
             2);
     return latLng;
+  }
+
+  // Road Scan
+
+  Future<List<Steps>> loopRoadScan(LatLng start, LatLng end) async {
+    List<Steps> result = [];
+    try {
+      await network
+          .get("origin=" +
+              start.latitude.toString() +
+              "," +
+              start.longitude.toString() +
+              "&destination=" +
+              end.latitude.toString() +
+              "," +
+              end.longitude.toString() +
+              "&key=AIzaSyB940mpfv4pNgFIHTLI2v0nEXcAiQaYMjE")
+          .then((dynamic res) {
+        //print(res.length.toString() + ' + ' + result.length.toString());
+        if (res != null && res.length > 0) result.addAll(res);
+        //print(result.length.toString());
+      });
+    } catch (e) {
+      print(e);
+    }
+    //print('result => ' + result.length.toString());
+    return Future.delayed(Duration(milliseconds: 1000), () => result);
+  }
+
+  void getRoad(LatLng start, LatLng end) {
+    loopRoadScan(start, end).then((value) {
+      List<Steps> rr = value;
+      for (final i in rr) {
+        latLng.add(i.startLocation);
+        latLng.add(i.endLocation);
+      }
+
+      setState(() {
+        PolylineEffect polylineEffect = new PolylineEffect(
+          startColor: new XColor(r: 47, g: 89, b: 131),
+          endColor: new XColor(r: 254, g: 204, b: 0),
+          list: latLng,
+        );
+        _polyline.addAll(polylineEffect.polylineList());
+      });
+    });
   }
 }

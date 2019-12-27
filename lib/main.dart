@@ -62,7 +62,9 @@ class HomeState extends State<Home> {
       home: SplashScreen(
         seconds: 1,
         backgroundColor: Colors.blue,
-        navigateAfterSeconds: MapPage(
+        navigateAfterSeconds: (!ready)
+            ? Center(child: CircularProgressIndicator())
+            : MapPage(
                 settingsState: settingsState,
               ),
       ),
