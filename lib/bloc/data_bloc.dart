@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:epsilon/database/db_manager.dart';
 import 'package:bloc/bloc.dart';
+import 'package:epsilon/model/shop.dart';
 import './bloc.dart';
 import 'dart:convert' as convert;
 import 'package:http/http.dart' as http;
@@ -29,51 +30,43 @@ class DataBloc extends Bloc<DataEvent, DataState> {
   }
 
   Stream<DataState> _loadData() async* {
+    print("enter0");
 
-//    var siteUrl = "http://165.227.192.11/api/1/sites/all";
-//    var categoryUrl = "http://165.227.192.11/api/1/categories/sites";
-//
-//    List<Site> sites = await _dbManager.getAllSites();
-//    List<Category> categories = await _dbManager.getAllCategories();
-//
-//    if (sites == null || sites.length == 0) {
-//      var response = await http.get(siteUrl);
-//      print("response code == ${response.statusCode}");
-//      if (response.statusCode  == 200) {
-//        Iterable jsonResponse = json.decode(response.body);
-//        print('>>> success! >>> $jsonResponse');
-//        try {
-//          sites = jsonResponse.map((x) => Site.fromMap(x)).toList();
-//          (x) => _dbManager.insertSite(sites[x]);
-//        }
-//        catch(e) {
-//          print(e);
-//        }
-//      } else {
-//        print('>>> fail?');
-//      }
-//    } else
-//      print("Sites data is already there : length = ${sites.length}");
-//
-//    if (categories == null || categories.length == 0) {
-//      var response = await http.get(categoryUrl);
-//      print("response code == ${response.statusCode}");
-//      if (response.statusCode  == 200) {
-//        Iterable jsonResponse = json.decode(response.body);
-//        print('>>> success! >>> $jsonResponse');
-//        try {
-//          categories = jsonResponse.map((x) => Category.fromMap(x)).toList();
-//          (x) => _dbManager.insertCategory(categories[x]);
-//          categories[0].selected = 1;
-//        }
-//        catch(e) {
-//          print(e);
-//        }
-//      } else {
-//        print('>>> fail?');
-//      }
-//    } else
-//      print("Categories data is already there : length = ${categories.length}");
+    var shopUrl = "https://matcha.defaoui.com/api/guest/titi";
+
+    //_dbManager.deleteAllShop();
+
+    List<Shop> shops = await _dbManager.getAllShops();
+
+    print("enter1");
+    if (shops == null || shops.length == 0) {
+      print("enter2");
+      try {
+        var response = await http.get(shopUrl);
+        print("response code == ${response.statusCode}");
+        print(response.body);
+        if (response.statusCode == 200) {
+          print("enter3");
+          Map<String, dynamic> body = json.decode(response.body);
+          print("body : $body");
+          Iterable jsonResponse = body['shops'];
+          print('>>> success! >>> $jsonResponse');
+          try {
+            shops = jsonResponse.map((x) => Shop.fromMap(x)).toList();
+            print(shops.length);
+            for (int i = 0; i < shops.length; i++)
+              _dbManager.insertShop(shops[i]);
+          } catch (e) {
+            print("Error in converting shops: $e");
+          }
+        } else {
+          print('>>> fail?');
+        }
+      } catch (e) {
+        print("global error : $e");
+      }
+    } else
+      print("Shops data is already there : length = ${shops.length}");
 
     yield AfterLoading();
   }

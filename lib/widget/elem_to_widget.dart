@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:epsilon/model/picture.dart';
 import 'package:epsilon/model/shop.dart';
 import 'package:epsilon/widget/shop_widget.dart';
@@ -27,9 +29,10 @@ class ElemToWidget {
               decoration: BoxDecoration(
                 color: Colors.black38,
                 image: DecorationImage(
-                  image: NetworkImage(i.path),
-                  fit: BoxFit.fitWidth
-                ),
+                    image: (i.localPath != null)
+                        ? FileImage(new File(i.localPath))
+                        : NetworkImage('https://' + i.path),
+                    fit: BoxFit.cover),
               ),
             );
           },
@@ -38,6 +41,7 @@ class ElemToWidget {
       viewportFraction: 1.0,
       autoPlay: true,
       autoPlayInterval: Duration(seconds: 4),
+      pauseAutoPlayOnTouch: Duration(seconds: 2),
     );
   }
 }

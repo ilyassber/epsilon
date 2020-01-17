@@ -8,8 +8,15 @@ class Category {
 
   Map<String, dynamic> toMap() {
     return {
-      'category_id' : id,
-      'title' : title,
+      'category_id': id,
+      'title': title,
     };
+  }
+
+  static Category fromMap(Map<String, dynamic> map) {
+    return Category(
+      id: map['id'],
+      title: map['title'],
+    );
   }
 }

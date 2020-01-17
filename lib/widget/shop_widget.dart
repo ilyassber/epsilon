@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:epsilon/model/shop.dart';
 import 'package:epsilon/model/picture.dart';
 import 'package:epsilon/tools/TextTools.dart';
@@ -6,19 +8,19 @@ import 'package:epsilon/widget/info_widget.dart';
 import 'package:flutter/material.dart';
 
 class ShopWidget {
-  ShopWidget(
-      {@required this.context,
-      @required this.shop,
-      @required this.onClick,
-      @required this.height,
-      @required this.width});
+  ShopWidget({
+    @required this.context,
+    @required this.shop,
+    @required this.onClick,
+    @required this.height,
+    @required this.width,
+  });
 
   final BuildContext context;
   final Shop shop;
   final void Function(int, Shop shop) onClick;
   final double height;
   final double width;
-  List<Picture> images;
 
   TextTools textTools = new TextTools();
   GeoTools geoTools = new GeoTools();
@@ -27,7 +29,7 @@ class ShopWidget {
     context = this.context;
     double height = 140; //MediaQuery.of(context).size.height;
     double width = MediaQuery.of(context).size.width;
-    images = shop.images;
+    print(shop.images[0].localPath);
     return Padding(
       padding: EdgeInsets.fromLTRB(20, 0, 20, 0),
       child: GestureDetector(
@@ -73,8 +75,10 @@ class ShopWidget {
                     child: ClipRRect(
                       borderRadius: new BorderRadius.circular(20),
                       child: Image(
-                        fit: BoxFit.fill,
-                        image: NetworkImage(images[0].path),
+                        fit: BoxFit.cover,
+                        image: (shop.images[0].localPath != null)
+                            ? FileImage(new File(shop.images[0].localPath))
+                            : NetworkImage('https://' + shop.images[0].path),
                       ),
                     ),
                   ),

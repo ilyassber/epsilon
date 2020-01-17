@@ -1,11 +1,18 @@
 import 'dart:convert';
 
+import 'package:epsilon/bloc/data_bloc.dart';
+import 'package:epsilon/bloc/data_event.dart';
+import 'package:epsilon/bloc/data_state.dart';
 import 'package:epsilon/settings/settings_state.dart';
 import 'package:epsilon/tools/reader.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splashscreen/splashscreen.dart';
 import 'package:epsilon/page/MapPage.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:splashscreen/splashscreen.dart';
 
 void main() => runApp(Home());
 
@@ -24,9 +31,14 @@ class HomeState extends State<Home> {
   Map<String, dynamic> map;
   int init;
 
+  // Bloc
+
+  DataBloc _dataBloc = DataBloc();
+
   @override
   void initState() {
     super.initState();
+    _dataBloc.add(DataEvent.loadData);
     initEnv();
   }
 
@@ -53,21 +65,40 @@ class HomeState extends State<Home> {
     });
   }
 
+  Widget bodyBuilder() {
+    print("enter body builder");
+    return BlocBuilder(
+      bloc: _dataBloc,
+      builder: (BuildContext context, DataState state) {
+        if (state is InitialDataState) {
+          return Container(
+            color: Colors.black,
+          );
+        } else if (state is AfterLoading) {
+          print("after loading");
+          return SplashScreen(
+            seconds: 1,
+            navigateAfterSeconds:
+            (!ready) ? Center(child: CircularProgressIndicator()) : MapPage(
+              settingsState: settingsState,
+            ),
+            backgroundColor: Colors.black,
+          );
+        } else
+          return Container(
+            color: Colors.red,
+          );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'epsilon',
       theme: ThemeData(primaryColor: Colors.amber),
-      home: SplashScreen(
-        seconds: 1,
-        backgroundColor: Colors.blue,
-        navigateAfterSeconds: (!ready)
-            ? Center(child: CircularProgressIndicator())
-            : MapPage(
-                settingsState: settingsState,
-              ),
-      ),
+      home: bodyBuilder(),
     );
   }
 }

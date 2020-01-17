@@ -1,81 +1,77 @@
+import 'package:epsilon/model/shop.dart';
 import 'package:sembast/sembast.dart';
 
 import 'app_database.dart';
 
 class DbManager {
   // ignore: constant_identifier_names
-  static const String SITE_STORE_NAME = 'site';
-  // ignore: constant_identifier_names
-  static const String CIRCUIT_STORE_NAME = 'circuit';
-  // ignore: constant_identifier_names
-  static const String CATEGORY_STORE_NAME = 'category';
-  // ignore: constant_identifier_names
-  static const String EVENT_STORE_NAME = 'event';
+  static const String SHOP_STORE_NAME = 'shop';
 
-  final _siteStore = intMapStoreFactory.store(SITE_STORE_NAME);
-  final _circuitStore = intMapStoreFactory.store(CIRCUIT_STORE_NAME);
-  final _categoryStore = intMapStoreFactory.store(CATEGORY_STORE_NAME);
-  final _eventStore = intMapStoreFactory.store(EVENT_STORE_NAME);
+  final _shopStore = intMapStoreFactory.store(SHOP_STORE_NAME);
 
   Future<Database> get _db async => await AppDatabase.instance.database;
 
-  /*
 
-  // Site Management Functions
+  // Shop Management Functions
 
-  Future insertSite(Site site) async {
-    await _siteStore.add(await _db, site.toMap());
+  Future insertShop(Shop shop) async {
+    await _shopStore.record(shop.id).put(await _db, shop.toMap());
   }
 
-  Future updateSite(Site site) async {
-    // For filtering by key (ID), RegEx, greater than, and many other criteria,
-    // we use a Finder.
-    final finder = Finder(filter: Filter.byKey(site.siteId));
-    await _siteStore.update(
+  Future updateShop(Shop shop) async {
+    final finder = Finder(filter: Filter.byKey(shop.id));
+    await _shopStore.update(
       await _db,
-      site.toMap(),
+      shop.toMap(),
       finder: finder,
     );
   }
 
-  Future deleteSite(Site site) async {
-    final finder = Finder(filter: Filter.byKey(site.key));
-    await _siteStore.delete(
+  Future deleteShop(Shop shop) async {
+    final finder = Finder(filter: Filter.byKey(shop.id));
+    await _shopStore.delete(
       await _db,
       finder: finder,
     );
   }
 
-  Future<List<Site>> getAllSites() async {
+  Future<List<Shop>> getAllShops() async {
 
-    final recordSnapshots = await _siteStore.find(
+    final recordSnapshots = await _shopStore.find(
       await _db,
     );
 
     return recordSnapshots.map((snapshot) {
-      final site = Site.fromMap(snapshot.value);
-      site.key = snapshot.key;
-      return site;
+      return Shop.fromMap(snapshot.value);
     }).toList();
   }
 
-  Future<List<Site>> getAllSortedClick() async {
+  Future deleteAllShop() async {
+    final finder = Finder();
+    await _shopStore.delete(
+      await _db,
+      finder: finder,
+    );
+  }
+
+  Future<List<Shop>> getAllSortedClick() async {
     final finder = Finder(sortOrders: [
       SortOrder('nbr_clicks'),
     ]);
 
-    final recordSnapshots = await _siteStore.find(
+    final recordSnapshots = await _shopStore.find(
       await _db,
       finder: finder,
     );
 
     return recordSnapshots.map((snapshot) {
-      final site = Site.fromMap(snapshot.value);
-      //site.siteId = snapshot.key;
-      return site;
+      final shop = Shop.fromMap(snapshot.value);
+      return shop;
     }).toList();
   }
 
+
+  /*
   // Circuit Management Functions
 
   Future insertCircuit(Circuit circuit) async {

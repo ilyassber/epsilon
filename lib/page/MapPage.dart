@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'dart:core';
 import 'dart:typed_data';
+import 'package:epsilon/database/db_manager.dart';
+import 'package:epsilon/database/image_db_manager.dart';
 import 'package:epsilon/map/polyline_effect.dart';
 import 'package:epsilon/model/category.dart';
 import 'package:epsilon/model/picture.dart';
@@ -77,32 +79,39 @@ class MapPageState extends State<MapPage> {
   // List Params
 
   XList xList;
-  List<Widget> list = [];
-  List<Shop> shops = [
-    new Shop(
-      id: 0,
-      title: 'l\'Hssen',
-      gpsLocation: '32.8989795,-6.9139437',
-      rating: 4.5,
-      categories: [
-        Category(
-          id: 0,
-          title: 'atay cha3ra',
-        ),
-      ],
-      images: [
-        Picture(
-          id: 0,
-          path: 'https://i.skyrock.net/9758/72509758/pics/2907926791_1.jpg',
-        ),
-      ],
-    ),
-  ];
+  //List<Widget> list = [];
+  List<Shop> shops = [];
+//  List<Shop> shops = [
+//    new Shop(
+//      id: 0,
+//      title: 'l\'Hssen',
+//      gpsLocation: '32.8989795,-6.9139437',
+//      rating: 4.5,
+//      categories: [
+//        Category(
+//          id: 0,
+//          title: 'atay cha3ra',
+//        ),
+//      ],
+//      images: [
+//        Picture(
+//          id: 0,
+//          path: 'https://i.skyrock.net/9758/72509758/pics/2907926791_1.jpg',
+//          localPath: null,
+//        ),
+//      ],
+//    ),
+//  ];
 
   // Tools
 
   ElemToWidget elemToWidget;
   GeoTools geoTools;
+
+  // Data Params
+
+  DbManager _dbManager = new DbManager();
+  ImageDbManager _imageDbManager = new ImageDbManager();
 
   // Other Params
 
@@ -111,6 +120,33 @@ class MapPageState extends State<MapPage> {
   double width;
   BuildContext context;
   NetworkTools network;
+  bool ready = false;
+
+  // Init Functions
+
+  void initEnv() async {
+    shops.addAll(await _dbManager.getAllShops());
+    geoTools.initSitesGeoPos(shops);
+    loadImages(context, shops);
+    ready = true;
+    callBack();
+  }
+
+  void loadImages(BuildContext context, List<Shop> shops) async {
+    if (await _imageDbManager.loadShopsImages(shops, callBack) > 0) {
+      List<Shop> newShops = await _dbManager.getAllShops();
+      shops.clear();
+      shops.addAll(newShops);
+      geoTools.initSitesGeoPos(shops);
+      getUserLocation();
+      callBack();
+    }
+    //initList(context);
+  }
+
+  void callBack() {
+    setState(() {});
+  }
 
   // check permissions
   @override
@@ -126,6 +162,7 @@ class MapPageState extends State<MapPage> {
         _mapStyle = string;
       });
     });
+    initEnv();
     // Check location permission has been granted
     PermissionHandler()
         .checkPermissionStatus(PermissionGroup
@@ -168,17 +205,18 @@ class MapPageState extends State<MapPage> {
     return list;
   }
 
-  void initMarkers(List<String> paths) async {
+  void initMarkers() async {
     if (markerIcons.length == 0) markerIcons.addAll(await iconToBit(paths));
-    for (int i = 1; i < markerIcons.length; i++) {
+    for (int i = 0; i < shops.length; i++) {
       _markers.add(new Marker(
         onTap: () {
           print('### SHOP MARKER CLICKED ###');
-          initShop(context, shops[i - 1]);
+          print(shops[i].toMap());
+          initShop(context, shops[i]);
         },
         markerId: MarkerId('$i'),
-        icon: BitmapDescriptor.fromBytes(markerIcons[i]),
-        position: new LatLng(shops[i - 1].lat, shops[i - 1].lng),
+        icon: BitmapDescriptor.fromBytes(markerIcons[1]),
+        position: new LatLng(shops[i].lat, shops[i].lng),
       ));
     }
     userPos = new Marker(
@@ -193,20 +231,20 @@ class MapPageState extends State<MapPage> {
 
   // Shop List
 
-  void initList(BuildContext context) {
-    list.clear();
-    geoTools.initSitesGeoPos(shops);
-    print('shops len ==>> ${shops.length}');
-    for (int i = 0; i < shops.length; i++) {
-      list.add(elemToWidget.getShopWidget(
-          context, shops[i], height, width, shopCallback));
-    }
-    xList = new XList(
-      context: context,
-      list: list,
-      onClick: null,
-    );
-  }
+//  void initList(BuildContext context) {
+//    list.clear();
+//    geoTools.initSitesGeoPos(shops);
+//    print('shops len ==>> ${shops.length}');
+//    for (int i = 0; i < shops.length; i++) {
+//      list.add(elemToWidget.getShopWidget(
+//          context, shops[i], height, width, shopCallback));
+//    }
+//    xList = new XList(
+//      context: context,
+//      list: list,
+//      onClick: null,
+//    );
+//  }
 
   // Init Widget
 
@@ -238,7 +276,7 @@ class MapPageState extends State<MapPage> {
           context,
           MaterialPageRoute(
               builder: (context) => ShopPage(
-                    shop: shops[clickedMarker],
+                    shop: shop,
                   )));
     }
   }
@@ -259,7 +297,7 @@ class MapPageState extends State<MapPage> {
           currentLocation.longitude ?? -2.233966);
     });
     print('centre $_centre');
-    initMarkers(paths);
+    initMarkers();
   }
 
   void updateUserLocation() async {
@@ -284,21 +322,19 @@ class MapPageState extends State<MapPage> {
     this.context = context;
     height = MediaQuery.of(context).size.height;
     width = MediaQuery.of(context).size.width;
-    initList(context);
+    //initList(context);
     return Scaffold(
       body: Container(
         height: height,
         width: width,
         child: Stack(
           children: <Widget>[
-            currentLocation == null
+            (currentLocation == null || !ready)
                 ? Center(child: CircularProgressIndicator())
                 : GoogleMap(
                     onMapCreated: (GoogleMapController controller) {
                       //_mapController.complete(controller);
                       mapController = controller;
-//                  mapController.setMapStyle(
-//                      '[{"featureType": "all","stylers": [{ "color": "#C0C0C0" }]},{"featureType": "road.arterial","elementType": "geometry","stylers": [{ "color": "#CCFFFF" }]},{"featureType": "landscape","elementType": "labels","stylers": [{ "visibility": "off" }]}]');
                       if (_mapStyle != null && controller != null) {
                         print('#### SET_MAP_STYLE ####');
                         mapController.setMapStyle(_mapStyle);
@@ -332,8 +368,7 @@ class MapPageState extends State<MapPage> {
                   alignment: Alignment.bottomCenter,
                   child: Container(
                     height: 140,
-                    child: elemToWidget.getShopWidget(
-                        context, shops[0], height, width, shopCallback),
+                    child: (shopWidget != null) ? shopWidget.build(context) : null,
                   ),
                 ),
               ),
@@ -520,21 +555,26 @@ class MapPageState extends State<MapPage> {
   }
 
   void getRoad(LatLng start, LatLng end) {
+    latLng.clear();
     loopRoadScan(start, end).then((value) {
       List<Steps> rr = value;
       for (final i in rr) {
         latLng.add(i.startLocation);
         latLng.add(i.endLocation);
       }
-
-      setState(() {
-        PolylineEffect polylineEffect = new PolylineEffect(
-          startColor: new XColor(r: 47, g: 89, b: 131),
-          endColor: new XColor(r: 254, g: 204, b: 0),
-          list: latLng,
-        );
-        _polyline.addAll(polylineEffect.polylineList());
-      });
+      if (shopVisibility == true) {
+        setState(() {
+          PolylineEffect polylineEffect = new PolylineEffect(
+            startColor: new XColor(r: 47, g: 89, b: 131),
+            endColor: new XColor(r: 254, g: 204, b: 0),
+            list: latLng,
+          );
+          _polyline.addAll(polylineEffect.polylineList());
+        });
+      } else {
+        _polyline.clear();
+        latLng.clear();
+      }
     });
   }
 }
